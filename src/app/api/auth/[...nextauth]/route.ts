@@ -1,3 +1,4 @@
+import { prismaClient } from "@/app/lib/db";
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
@@ -8,6 +9,28 @@ const handler = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
+  callbacks: {
+    async signIn(params) {
+      if (!params.user.email) {
+        console.error("Sign-in attempt without email:", params);
+        return false;
+      }
+
+      try {
+        await prismaClient.user.create({
+          data: {
+            email: params.user.email,
+            provider: "Google",
+            name: params.user.name || "Unknown User",
+          },
+        });
+      } catch (error) {
+        console.error("Error during sign-in callback:", error);
+        return false;
+      }
+      return true;
+    },
+  },
 });
 
 export { handler as GET, handler as POST };
