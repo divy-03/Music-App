@@ -9,23 +9,31 @@ const handler = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
+  secret: process.env.NEXTAUTH_SECRET || "default",
   callbacks: {
-    async signIn(params) {
-      if (!params.user.email) {
-        console.error("Sign-in attempt without email:", params);
-        return false;
-      }
-
+    async signIn({ account, profile }) {
       try {
-        await prismaClient.user.create({
-          data: {
-            email: params.user.email,
-            provider: "GOOGLE",
-            name: params.user.name || "Unknown User",
-          },
-        });
+        if (account?.provider === "google") {
+          const user = await prismaClient.user.findUnique({
+            where: {
+              email: profile?.email!,
+            },
+          });
+
+          if (!user) {
+            await prismaClient.user.create({
+              data: {
+                email: profile?.email!,
+                name: profile?.name || undefined,
+                provider: "Google",
+              },
+            });
+          }
+        }
+        return true;
       } catch (error) {
-        console.error("Error during sign-in callback:", error);
+        console.log(error);
+        //throw error;
         return false;
       }
       return true;

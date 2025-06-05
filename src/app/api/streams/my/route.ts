@@ -1,13 +1,8 @@
 import { prismaClient } from "@/app/lib/db";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
-const UpvoteSchema = z.object({
-  streamId: z.string(),
-});
-
-export async function POST(req: Request) {
+export async function GET() {
   const session = await getServerSession();
 
   const user = await prismaClient.user.findFirst({
@@ -21,20 +16,17 @@ export async function POST(req: Request) {
   }
 
   try {
-    const data = await UpvoteSchema.parseAsync(await req.json());
-    await prismaClient.upvote.create({
-      data: {
+    const streams = await prismaClient.stream.findMany({
+      where: {
         userId: user.id,
-        streamId: data.streamId,
       },
     });
-    return NextResponse.json({
-      message: "Done!",
-    });
+
+    return NextResponse.json(streams);
   } catch (error) {
-    console.error("Error upvoting stream:", error);
+    console.error("Error fetching streams:", error);
     return NextResponse.json(
-      { error: "Failed to upvote stream" },
+      { error: "Failed to fetch streams" },
       { status: 500 }
     );
   }

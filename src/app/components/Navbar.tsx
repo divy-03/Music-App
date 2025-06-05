@@ -8,7 +8,7 @@ const Navbar = () => {
   console.log("Session data:", session);
 
   return (
-    <nav className="bg-gray-900 text-white px-6 py-4 flex items-center justify-between shadow">
+    <nav className="from-zinc-900 to-black text-white px-6 py-4 flex items-center justify-between shadow">
       <div className="flex items-center space-x-6">
         <Link
           href="/"
